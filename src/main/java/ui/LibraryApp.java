@@ -35,8 +35,12 @@ public class LibraryApp extends JFrame {
 
         JButton addButton = new JButton("Добавить книгу");
         JButton deleteButton = new JButton("Удалить книгу");
+        JButton sortByAuthorButton = new JButton("Сортировать по автору");
+        JButton sortByYearButton = new JButton("Сортировать по году");
         bottomPanel.add(addButton);
         bottomPanel.add(deleteButton);
+        bottomPanel.add(sortByAuthorButton);
+        bottomPanel.add(sortByYearButton);
 
         textArea = new JTextArea();
         textArea.setEditable(false);
@@ -49,87 +53,34 @@ public class LibraryApp extends JFrame {
 
         loadBooks();
 
+        // Обработчики событий
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String author = JOptionPane.showInputDialog("Введите автора:");
-                if (author == null || author.isEmpty()) {
-                    showErrorMessage("Автор не может быть пустым.");
-                    return;
-                }
-
-                String title = JOptionPane.showInputDialog("Введите название:");
-                if (title == null || title.isEmpty()) {
-                    showErrorMessage("Название не может быть пустым.");
-                    return;
-                }
-
-                String yearInput = JOptionPane.showInputDialog("Введите год издания:");
-                if (yearInput == null || yearInput.isEmpty()) {
-                    showErrorMessage("Год издания не может быть пустым.");
-                    return;
-                }
-
-                String copiesInput = JOptionPane.showInputDialog("Введите количество экземпляров:");
-                if (copiesInput == null || copiesInput.isEmpty()) {
-                    showErrorMessage("Количество экземпляров не может быть пустым.");
-                    return;
-                }
-
-                try {
-                    int year = Integer.parseInt(yearInput);
-                    int copies = Integer.parseInt(copiesInput);
-
-                    Book book = new Book(author, title, year, copies);
-                    if (bookService.addBook(book)) {
-                        showSuccessMessage("Книга добавлена!");
-
-                        // Обновляем список книг
-                        loadBooks();
-                    } else {
-                        showErrorMessage("Ошибка при добавлении книги!");
-                    }
-                } catch (NumberFormatException ex) {
-                    showErrorMessage("Некорректный ввод! Введите числа для года и количества экземпляров.");
-                }
+                addBook();
             }
         });
 
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String author = JOptionPane.showInputDialog("Введите автора книги для удаления:");
-                if (author == null || author.isEmpty()) {
-                    showErrorMessage("Автор не может быть пустым.");
-                    return;
-                }
+                deleteBook();
+            }
+        });
 
-                String title = JOptionPane.showInputDialog("Введите название книги для удаления:");
-                if (title == null || title.isEmpty()) {
-                    showErrorMessage("Название не может быть пустым.");
-                    return;
-                }
+        sortByAuthorButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<Book> books = bookService.getAllBooksOrderedByAuthor();
+                displayBooks(books);
+            }
+        });
 
-                String copiesInput = JOptionPane.showInputDialog("Введите количество экземпляров для удаления:");
-                if (copiesInput == null || copiesInput.isEmpty()) {
-                    showErrorMessage("Количество экземпляров не может быть пустым.");
-                    return;
-                }
-
-                try {
-                    int count = Integer.parseInt(copiesInput);
-
-                    if (bookService.updateCopies(author, title, count)) {
-                        showSuccessMessage("Экземпляры удалены!");
-
-                        // Обновляем список книг
-                        loadBooks();
-                    } else {
-                        showErrorMessage("Ошибка при удалении экземпляров!");
-                    }
-                } catch (NumberFormatException ex) {
-                    showErrorMessage("Некорректный ввод! Введите число для количества экземпляров.");
-                }
+        sortByYearButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<Book> books = bookService.getAllBooksOrderedByYear();
+                displayBooks(books);
             }
         });
 
@@ -138,7 +89,7 @@ public class LibraryApp extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String query = searchField.getText();
                 if (!query.isBlank()) {
-                    java.util.List<Book> filteredBooks = bookService.findBooks(query);
+                    List<Book> filteredBooks = bookService.findBooks(query);
                     displayBooks(filteredBooks);
                 } else {
                     loadBooks(); // Показать все книги, если строка поиска пустая
@@ -147,8 +98,82 @@ public class LibraryApp extends JFrame {
         });
     }
 
+    private void addBook() {
+        String author = JOptionPane.showInputDialog("Введите автора:");
+        if (author == null || author.isEmpty()) {
+            showErrorMessage("Автор не может быть пустым.");
+            return;
+        }
+
+        String title = JOptionPane.showInputDialog("Введите название:");
+        if (title == null || title.isEmpty()) {
+            showErrorMessage("Название не может быть пустым.");
+            return;
+        }
+
+        String yearInput = JOptionPane.showInputDialog("Введите год издания:");
+        if (yearInput == null || yearInput.isEmpty()) {
+            showErrorMessage("Год издания не может быть пустым.");
+            return;
+        }
+
+        String copiesInput = JOptionPane.showInputDialog("Введите количество экземпляров:");
+        if (copiesInput == null || copiesInput.isEmpty()) {
+            showErrorMessage("Количество экземпляров не может быть пустым.");
+            return;
+        }
+
+        try {
+            int year = Integer.parseInt(yearInput);
+            int copies = Integer.parseInt(copiesInput);
+
+            Book book = new Book(author, title, year, copies);
+            if (bookService.addBook(book)) {
+                showSuccessMessage("Книга добавлена!");
+                loadBooks(); // Обновляем список книг
+            } else {
+                showErrorMessage("Ошибка при добавлении книги!");
+            }
+        } catch (NumberFormatException ex) {
+            showErrorMessage("Некорректный ввод! Введите числа для года и количества экземпляров.");
+        }
+    }
+
+    private void deleteBook() {
+        String author = JOptionPane.showInputDialog("Введите автора книги для удаления:");
+        if (author == null || author.isEmpty()) {
+            showErrorMessage("Автор не может быть пустым.");
+            return;
+        }
+
+        String title = JOptionPane.showInputDialog("Введите название книги для удаления:");
+        if (title == null || title.isEmpty()) {
+            showErrorMessage("Название не может быть пустым.");
+            return;
+        }
+
+        String copiesInput = JOptionPane.showInputDialog("Введите количество экземпляров для удаления:");
+        if (copiesInput == null || copiesInput.isEmpty()) {
+            showErrorMessage("Количество экземпляров не может быть пустым.");
+            return;
+        }
+
+        try {
+            int count = Integer.parseInt(copiesInput);
+
+            if (bookService.updateCopies(author, title, count)) {
+                showSuccessMessage("Экземпляры удалены!");
+                loadBooks(); // Обновляем список книг
+            } else {
+                showErrorMessage("Ошибка при удалении экземпляров!");
+            }
+        } catch (NumberFormatException ex) {
+            showErrorMessage("Некорректный ввод! Введите число для количества экземпляров.");
+        }
+    }
+
     private void loadBooks() {
-        java.util.List<Book> books = bookService.getAllBooksOrderedByAuthor();
+        List<Book> books = bookService.getAllBooksOrderedByAuthor();
         displayBooks(books);
     }
 
