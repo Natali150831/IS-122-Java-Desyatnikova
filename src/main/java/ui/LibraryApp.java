@@ -6,14 +6,12 @@ import service.BookService;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 public class LibraryApp extends JFrame {
-    private IBookService bookService = new BookService();
-    private JTextField searchField;
-    private JTextArea textArea;
+    private final IBookService bookService = new BookService();
+    private final JTextField searchField;
+    private final JTextArea textArea;
 
     public LibraryApp() {
         // Инициализация интерфейса
@@ -51,49 +49,31 @@ public class LibraryApp extends JFrame {
 
         add(contentPanel);
 
+        // Загрузка книг при запуске
         loadBooks();
 
         // Обработчики событий
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addBook();
-            }
+        addButton.addActionListener(e -> addBook());
+
+        deleteButton.addActionListener(e -> deleteBook());
+
+        sortByAuthorButton.addActionListener(e -> {
+            List<Book> books = bookService.getAllBooksOrderedByAuthor();
+            displayBooks(books);
         });
 
-        deleteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                deleteBook();
-            }
+        sortByYearButton.addActionListener(e -> {
+            List<Book> books = bookService.getAllBooksOrderedByYear();
+            displayBooks(books);
         });
 
-        sortByAuthorButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                List<Book> books = bookService.getAllBooksOrderedByAuthor();
-                displayBooks(books);
-            }
-        });
-
-        sortByYearButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                List<Book> books = bookService.getAllBooksOrderedByYear();
-                displayBooks(books);
-            }
-        });
-
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String query = searchField.getText();
-                if (!query.isBlank()) {
-                    List<Book> filteredBooks = bookService.findBooks(query);
-                    displayBooks(filteredBooks);
-                } else {
-                    loadBooks(); // Показать все книги, если строка поиска пустая
-                }
+        searchButton.addActionListener(e -> {
+            String query = searchField.getText();
+            if (!query.isBlank()) {
+                List<Book> filteredBooks = bookService.findBooks(query);
+                displayBooks(filteredBooks);
+            } else {
+                loadBooks(); // Показать все книги, если строка поиска пустая
             }
         });
     }
@@ -173,8 +153,15 @@ public class LibraryApp extends JFrame {
     }
 
     private void loadBooks() {
-        List<Book> books = bookService.getAllBooksOrderedByAuthor();
-        displayBooks(books);
+        new Thread(() -> {
+            try {
+                List<Book> books = bookService.getAllBooksOrderedByAuthor();
+                SwingUtilities.invokeLater(() -> displayBooks(books));
+            } catch (Exception e) {
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> showErrorMessage("Ошибка при загрузке книг: " + e.getMessage()));
+            }
+        }).start();
     }
 
     private void displayBooks(List<Book> books) {
@@ -191,5 +178,10 @@ public class LibraryApp extends JFrame {
 
     private void showSuccessMessage(String message) {
         JOptionPane.showMessageDialog(this, message, "Успех", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+        super.setVisible(b); // Вызов родительского метода
     }
 }
