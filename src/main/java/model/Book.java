@@ -14,10 +14,6 @@ public class Book {
         this.copies = copies;
     }
 
-    public Long getId() {
-        return id;
-    }
-
     public String getAuthor() {
         return author;
     }

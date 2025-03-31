@@ -10,19 +10,19 @@ import java.util.List;
 
 public class LibraryApp extends JFrame {
     private final IBookService bookService = new BookService();
-    private final JTextField searchField;
-    private final JTextArea textArea;
+    private final JTextField searchField; // Поле ввода для поиска
+    private final JTextArea textArea; // Область вывода результатов
 
     public LibraryApp() {
         // Инициализация интерфейса
         setTitle("Библиотека");
         setSize(800, 500);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //полное завершение работы программы после закрытия окна
+        setLocationRelativeTo(null); //окно по центру
 
-        JPanel contentPanel = new JPanel(new BorderLayout());
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel contentPanel = new JPanel(new BorderLayout()); //главный контейнер для всех элементов интерфейса
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT)); //выравнение полевому краю
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)); //тут по правому
 
         JLabel searchLabel = new JLabel("Поиск по автору или названию: ");
         searchField = new JTextField(20);
@@ -39,13 +39,13 @@ public class LibraryApp extends JFrame {
         bottomPanel.add(deleteButton);
         bottomPanel.add(sortByAuthorButton);
         bottomPanel.add(sortByYearButton);
-
+        //строковая область бля отображения списка книг
         textArea = new JTextArea();
-        textArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        contentPanel.add(topPanel, BorderLayout.NORTH);
-        contentPanel.add(bottomPanel, BorderLayout.SOUTH);
-        contentPanel.add(scrollPane, BorderLayout.CENTER);
+        textArea.setEditable(false);//запрещает редактирование текста в этой области
+        JScrollPane scrollPane = new JScrollPane(textArea); //для прокрутки если не вмещается
+        contentPanel.add(topPanel, BorderLayout.NORTH); //панель поиска
+        contentPanel.add(bottomPanel, BorderLayout.SOUTH); //кнопки снизу
+        contentPanel.add(scrollPane, BorderLayout.CENTER); //центр(область с книгами)
 
         add(contentPanel);
 
@@ -151,25 +151,42 @@ public class LibraryApp extends JFrame {
             showErrorMessage("Некорректный ввод! Введите число для количества экземпляров.");
         }
     }
-
+    //загрузка списка книг
     private void loadBooks() {
-        new Thread(() -> {
+        //поток загрузки книг
+        Thread thread = new Thread(() -> {
             try {
                 List<Book> books = bookService.getAllBooksOrderedByAuthor();
-                SwingUtilities.invokeLater(() -> displayBooks(books));
+                if (books != null && !books.isEmpty()) {
+                    SwingUtilities.invokeLater(() -> displayBooks(books));
+                } else {
+                    SwingUtilities.invokeLater(() -> textArea.setText("Список книг пуст."));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 SwingUtilities.invokeLater(() -> showErrorMessage("Ошибка при загрузке книг: " + e.getMessage()));
             }
-        }).start();
+        });thread.start();
     }
 
     private void displayBooks(List<Book> books) {
+        if (books == null || textArea == null) {
+            System.err.println("Ошибка: books или textArea равен null.");
+            return;
+        }
+
         StringBuilder sb = new StringBuilder();
         for (Book book : books) {
-            sb.append(book.toString()).append("\n");
+            if (book != null) { // Проверка на null для каждой книги
+                sb.append(book).append("\n");
+            }
         }
-        textArea.setText(sb.toString());
+
+        if (sb.length() > 0) {
+            textArea.setText(sb.toString());
+        } else {
+            textArea.setText("Список книг пуст.");
+        }
     }
 
     private void showErrorMessage(String message) {
@@ -182,6 +199,6 @@ public class LibraryApp extends JFrame {
 
     @Override
     public void setVisible(boolean b) {
-        super.setVisible(b); // Вызов родительского метода
+        super.setVisible(b);
     }
 }
