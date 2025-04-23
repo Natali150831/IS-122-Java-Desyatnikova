@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BookStorage implements IBookStorage {
-    static File f =new File("src/main/resources/kursach_jv.fdb");
+    static File f = new File("src/main/resources/kursach_jv.fdb");
     static String absolute = f.getAbsolutePath();
     private static final String URL = "jdbc:firebirdsql://localhost:3050/" + absolute;
     private static final String USER = "sysdba";
@@ -17,10 +17,9 @@ public class BookStorage implements IBookStorage {
 
     @Override
     public boolean addBook(Book book) {
-        // существует ли книга с таким же автором и названием
-        String checkSql = "SELECT ID, COPIES FROM BOOKS WHERE AUTHOR = ? AND TITLE = ?"; //проверка
-        String updateSql = "UPDATE BOOKS SET COPIES = COPIES + ? WHERE ID = ?"; //обновление
-        String insertSql = "INSERT INTO BOOKS (AUTHOR, TITLE, PUBLICATION_YEAR, COPIES) VALUES (?, ?, ?, ?)"; //вставка
+        String checkSql = "SELECT ID, COPIES FROM BOOKS WHERE AUTHOR = ? AND TITLE = ?";
+        String updateSql = "UPDATE BOOKS SET COPIES = COPIES + ? WHERE ID = ?";
+        String insertSql = "INSERT INTO BOOKS (AUTHOR, TITLE, PUBLICATION_YEAR, COPIES) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
@@ -30,17 +29,13 @@ public class BookStorage implements IBookStorage {
 
             try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next()) {
-                    // Книга уже существует, обновляем количество экземпляров
                     long existingId = rs.getLong("ID");
-                    int existingCopies = rs.getInt("COPIES");
-
                     try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
-                        updateStmt.setInt(1, book.getCopies()); // Увеличиваем количество экземпляров
+                        updateStmt.setInt(1, book.getCopies());
                         updateStmt.setLong(2, existingId);
                         updateStmt.executeUpdate();
                     }
                 } else {
-                    // Книга не существует, добавляем новую запись
                     try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
                         insertStmt.setString(1, book.getAuthor());
                         insertStmt.setString(2, book.getTitle());
@@ -50,9 +45,7 @@ public class BookStorage implements IBookStorage {
                     }
                 }
             }
-
             return true;
-            //обработка ошибок
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -61,14 +54,35 @@ public class BookStorage implements IBookStorage {
 
     @Override
     public boolean deleteBook(String author, String title) {
-        String sql = "DELETE FROM BOOKS WHERE AUTHOR = ? AND TITLE = ?";
+        // Вместо удаления устанавливаем количество экземпляров в 0
+        String sql = "UPDATE BOOKS SET COPIES = 0 WHERE AUTHOR = ? AND TITLE = ?";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, author);
             pstmt.setString(2, title);
-            pstmt.executeUpdate();
-            return true;
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean removeCopies(String author, String title, int count) {
+        String sql = "UPDATE BOOKS SET COPIES = " +
+                "CASE WHEN (COPIES - ?) < 0 THEN 0 ELSE (COPIES - ?) END " +
+                "WHERE AUTHOR = ? AND TITLE = ?";
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, count);
+            pstmt.setInt(2, count);
+            pstmt.setString(3, author);
+            pstmt.setString(4, title);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -77,43 +91,50 @@ public class BookStorage implements IBookStorage {
 
     @Override
     public boolean updateCopies(String author, String title, int count) {
-        String sql = "UPDATE BOOKS SET COPIES = COPIES + ? WHERE AUTHOR = ? AND TITLE = ?";
+        String sql = "UPDATE BOOKS SET COPIES = " +
+                "CASE WHEN (COPIES + ?) < 0 THEN 0 ELSE (COPIES + ?) END " +
+                "WHERE AUTHOR = ? AND TITLE = ?";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, count);  // Увеличиваем или уменьшаем количество экземпляров
-            pstmt.setString(2, author);
-            pstmt.setString(3, title);
-            pstmt.executeUpdate();
-
-            // Проверяем, чтобы количество экземпляров не стало отрицательным
-            String checkSql = "SELECT COPIES FROM BOOKS WHERE AUTHOR = ? AND TITLE = ?";
-            try (PreparedStatement checkPstmt = connection.prepareStatement(checkSql)) {
-                checkPstmt.setString(1, author);
-                checkPstmt.setString(2, title);
-                try (ResultSet rs = checkPstmt.executeQuery()) {
-                    if (rs.next()) {
-                        int copies = rs.getInt("COPIES");
-                        if (copies < 0) {
-                            // Если количество экземпляров стало отрицательным, устанавливаем его в 0
-                            String fixSql = "UPDATE BOOKS SET COPIES = 0 WHERE AUTHOR = ? AND TITLE = ?";
-                            try (PreparedStatement fixPstmt = connection.prepareStatement(fixSql)) {
-                                fixPstmt.setString(1, author);
-                                fixPstmt.setString(2, title);
-                                fixPstmt.executeUpdate();
-                            }
-                        }
-                    }
-                }
-            }
-
-            return true;
+            pstmt.setInt(1, count);
+            pstmt.setInt(2, count);
+            pstmt.setString(3, author);
+            pstmt.setString(4, title);
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
-    //поиск книг по совпадению с query в названии или авторе
+
+    @Override
+    public Book findExactBook(String author, String title) {
+        String sql = "SELECT * FROM BOOKS WHERE UPPER(AUTHOR) = UPPER(?) AND UPPER(TITLE) = UPPER(?)";
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, author);
+            pstmt.setString(2, title);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    Book book = new Book(
+                            rs.getString("AUTHOR"),
+                            rs.getString("TITLE"),
+                            rs.getInt("PUBLICATION_YEAR"),
+                            rs.getInt("COPIES"));
+                    book.setId(rs.getLong("ID"));
+                    return book;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     @Override
     public List<Book> findBooksByAuthorAndTitle(String query) {
         String sql = "SELECT * FROM BOOKS WHERE UPPER(AUTHOR) LIKE UPPER(?) OR UPPER(TITLE) LIKE UPPER(?)";
@@ -123,14 +144,12 @@ public class BookStorage implements IBookStorage {
         return getBooks(sql, params);
     }
 
-    //возвращает все книги, сортирует по автору (от а до я)
     @Override
     public List<Book> getAllBooksOrderedByAuthor() {
         String sql = "SELECT * FROM BOOKS ORDER BY UPPER(AUTHOR)";
         return getBooks(sql, new ArrayList<>());
     }
 
-    //возвращает все книги , отсортированныйх по году издания( по возрастанию)
     @Override
     public List<Book> getAllBooksOrderedByYear() {
         String sql = "SELECT * FROM BOOKS ORDER BY PUBLICATION_YEAR";
@@ -138,7 +157,7 @@ public class BookStorage implements IBookStorage {
     }
 
     private List<Book> getBooks(String sql, List<String> params) {
-        List<Book> books = new ArrayList<>(); //создаем пустой список для хранения результатов
+        List<Book> books = new ArrayList<>();
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -162,11 +181,9 @@ public class BookStorage implements IBookStorage {
                     }
                 }
             }
-
-            return books;
         } catch (SQLException e) {
             e.printStackTrace();
-            return books;
         }
+        return books;
     }
 }

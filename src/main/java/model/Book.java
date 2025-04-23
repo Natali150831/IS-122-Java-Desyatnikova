@@ -6,7 +6,7 @@ public class Book {
     private String title;
     private int publicationYear;
     private int copies;
-
+    // Конструктор для создания объекта книги с указанными параметрами
     public Book(String author, String title, int publicationYear, int copies) {
         this.author = author;
         this.title = title;

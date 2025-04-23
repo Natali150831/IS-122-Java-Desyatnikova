@@ -11,17 +11,36 @@ public class BookService implements IBookService {
 
     @Override
     public boolean addBook(Book book) {
-        return bookStorage.addBook(book);
+        Book existingBook = bookStorage.findExactBook(book.getAuthor(), book.getTitle());
+        if (existingBook != null) {
+            return bookStorage.updateCopies(book.getAuthor(), book.getTitle(), book.getCopies());
+        } else {
+            return bookStorage.addBook(book);
+        }
     }
 
     @Override
     public boolean deleteBook(String author, String title) {
-        return bookStorage.deleteBook(author, title);
+        // Теперь это просто установка количества в 0
+        return bookStorage.updateCopies(author, title, -Integer.MAX_VALUE);
+    }
+
+    @Override
+    public boolean removeCopies(String author, String title, int count) {
+        if (count <= 0) {
+            return false;
+        }
+        return bookStorage.removeCopies(author, title, count);
     }
 
     @Override
     public boolean updateCopies(String author, String title, int count) {
         return bookStorage.updateCopies(author, title, count);
+    }
+
+    @Override
+    public Book findExactBook(String author, String title) {
+        return bookStorage.findExactBook(author, title);
     }
 
     @Override
