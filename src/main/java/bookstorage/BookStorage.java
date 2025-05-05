@@ -17,9 +17,9 @@ public class BookStorage implements IBookStorage {
 
     @Override
     public boolean addBook(Book book) {
-        String checkSql = "SELECT ID, COPIES FROM BOOKS WHERE AUTHOR = ? AND TITLE = ?";
-        String updateSql = "UPDATE BOOKS SET COPIES = COPIES + ? WHERE ID = ?";
-        String insertSql = "INSERT INTO BOOKS (AUTHOR, TITLE, PUBLICATION_YEAR, COPIES) VALUES (?, ?, ?, ?)";
+        String checkSql = "SELECT ID, COPIES FROM BOOKS WHERE AUTHOR = ? AND TITLE = ?"; //для проверки существования книги по автору и названию
+        String updateSql = "UPDATE BOOKS SET COPIES = COPIES + ? WHERE ID = ?"; //запрос на обновление количества экземпляров (COPIES), если книга найдена
+        String insertSql = "INSERT INTO BOOKS (AUTHOR, TITLE, PUBLICATION_YEAR, COPIES) VALUES (?, ?, ?, ?)";//запрос на вставку новой книги, если она не существует
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
@@ -54,7 +54,7 @@ public class BookStorage implements IBookStorage {
 
     @Override
     public boolean deleteBook(String author, String title) {
-        // Вместо удаления устанавливаем количество экземпляров в 0
+        // запрос не удаляет книгу физически, а обнуляет количество экземпляров
         String sql = "UPDATE BOOKS SET COPIES = 0 WHERE AUTHOR = ? AND TITLE = ?";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -71,6 +71,7 @@ public class BookStorage implements IBookStorage {
 
     @Override
     public boolean removeCopies(String author, String title, int count) {
+        //уменьшает количество экземпляров на count, но не ниже 0
         String sql = "UPDATE BOOKS SET COPIES = " +
                 "CASE WHEN (COPIES - ?) < 0 THEN 0 ELSE (COPIES - ?) END " +
                 "WHERE AUTHOR = ? AND TITLE = ?";
@@ -111,6 +112,7 @@ public class BookStorage implements IBookStorage {
 
     @Override
     public Book findExactBook(String author, String title) {
+        //ищем книгу по точному совпадению автора и названия
         String sql = "SELECT * FROM BOOKS WHERE UPPER(AUTHOR) = UPPER(?) AND UPPER(TITLE) = UPPER(?)";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);

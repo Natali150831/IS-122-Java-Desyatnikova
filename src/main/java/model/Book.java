@@ -54,7 +54,9 @@ public class Book {
     public void setCopies(int copies) {
         this.copies = copies;
     }
+    public Long getId() {
+        return id;
+    }
 
     public Book() {}
-
 }
