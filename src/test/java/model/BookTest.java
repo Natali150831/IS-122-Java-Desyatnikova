@@ -7,7 +7,7 @@ public class BookTest {
 
     @Test
     void testBookCreation() {
-        Book book = new Book("Дж. К. Роулинг", "Гарри Поттер", 1997, 5);
+        Book book = new Book(1L, "Дж. К. Роулинг", "Гарри Поттер", 1997, 5);
         book.setId(1L);
 
         assertEquals("Дж. К. Роулинг", book.getAuthor());

@@ -17,9 +17,16 @@
         <assertj.version>3.25.3</assertj.version>
         <surefire.version>3.2.5</surefire.version>
         <argLine>-XX:+IgnoreUnrecognizedVMOptions -Djdk.instrument.traceUsage=false</argLine>
+        <jaybird.version>6.0.1</jaybird.version>
     </properties>
 
     <dependencies>
+        <!-- Firebird JDBC Driver -->
+        <dependency>
+            <groupId>org.firebirdsql.jdbc</groupId>
+            <artifactId>jaybird</artifactId>
+            <version>${jaybird.version}</version>
+        </dependency>
         <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

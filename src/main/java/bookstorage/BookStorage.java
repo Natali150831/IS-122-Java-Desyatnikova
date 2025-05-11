@@ -123,7 +123,7 @@ public class BookStorage implements IBookStorage {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     Book book = new Book(
-                            rs.getString("AUTHOR"),
+                            1L, rs.getString("AUTHOR"),
                             rs.getString("TITLE"),
                             rs.getInt("PUBLICATION_YEAR"),
                             rs.getInt("COPIES"));
@@ -171,7 +171,7 @@ public class BookStorage implements IBookStorage {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     Book book = new Book(
-                            rs.getString("AUTHOR"),
+                            1L, rs.getString("AUTHOR"),
                             rs.getString("TITLE"),
                             rs.getInt("PUBLICATION_YEAR"),
                             rs.getInt("COPIES"));
@@ -187,5 +187,8 @@ public class BookStorage implements IBookStorage {
             e.printStackTrace();
         }
         return books;
+    }
+
+    public void deleteBook(long l, int i) {
     }
 }
