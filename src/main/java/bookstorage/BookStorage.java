@@ -2,18 +2,16 @@ package bookstorage;
 
 import interfaces.IBookStorage;
 import model.Book;
+import config.DatabaseConfig;
 
-import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BookStorage implements IBookStorage {
-    static File f = new File("src/main/resources/kursach_jv.fdb");
-    static String absolute = f.getAbsolutePath();
-    private static final String URL = "jdbc:firebirdsql://localhost:3050/" + absolute;
-    private static final String USER = "sysdba";
-    private static final String PASSWORD = "masterkey";
+    private static final String URL = DatabaseConfig.getFullDatabaseUrl();
+    private static final String USER = DatabaseConfig.getUser();
+    private static final String PASSWORD = DatabaseConfig.getPassword();
 
     @Override
     public boolean addBook(Book book) {
@@ -189,6 +187,4 @@ public class BookStorage implements IBookStorage {
         return books;
     }
 
-    public void deleteBook(long l, int i) {
-    }
 }
