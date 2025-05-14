@@ -9,21 +9,27 @@ public class DatabaseConfig {
     private static final String CONFIG_FILE = "config.properties";
     private static final Properties properties = new Properties();
     private static String absoluteDbPath;
+    private static DatabaseInitializer initializer = new DatabaseInitializer();
 
     static {
+        loadConfiguration();
+    }
+
+    private static void loadConfiguration() {
         try (InputStream input = DatabaseConfig.class.getClassLoader().getResourceAsStream(CONFIG_FILE)) {
             if (input == null) {
                 throw new RuntimeException("Unable to find " + CONFIG_FILE);
             }
             properties.load(input);
+            absoluteDbPath = new File(properties.getProperty("db.file.path")).getAbsolutePath();
 
-            // Инициализируем абсолютный путь к файлу БД
-            File dbFile = new File(properties.getProperty("db.file.path"));
-            absoluteDbPath = dbFile.getAbsolutePath();
-
-            // Инициализируем БД при старте приложения
-            DatabaseInitializer.initializeDatabase();
-
+            // Инициализация БД
+            initializer.setup(
+                    getAbsoluteDbPath(),
+                    getFullDatabaseUrl(),
+                    getUser(),
+                    getPassword()
+            );
         } catch (IOException e) {
             throw new RuntimeException("Failed to load configuration file", e);
         }

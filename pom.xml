@@ -93,6 +93,7 @@
                 <filtering>true</filtering>
                 <includes>
                     <include>**/*.properties</include>
+
                 </includes>
             </resource>
             <!-- Бинарные ресурсы без фильтрации -->
@@ -101,6 +102,7 @@
                 <filtering>false</filtering>
                 <includes>
                     <include>**/*.fdb</include>
+                    <include>**/*.sql</include>
                 </includes>
             </resource>
         </resources>
