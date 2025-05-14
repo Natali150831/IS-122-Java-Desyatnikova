@@ -8,7 +8,6 @@ import java.util.Properties;
 public class DatabaseConfig {
     private static final String CONFIG_FILE = "config.properties";
     private static final Properties properties = new Properties();
-
     private static String absoluteDbPath;
 
     static {
@@ -22,13 +21,12 @@ public class DatabaseConfig {
             File dbFile = new File(properties.getProperty("db.file.path"));
             absoluteDbPath = dbFile.getAbsolutePath();
 
+            // Инициализируем БД при старте приложения
+            DatabaseInitializer.initializeDatabase();
+
         } catch (IOException e) {
             throw new RuntimeException("Failed to load configuration file", e);
         }
-    }
-
-    public static String getAbsoluteDbPath() {
-        return absoluteDbPath;
     }
 
     public static String getUrl() {
@@ -45,5 +43,9 @@ public class DatabaseConfig {
 
     public static String getFullDatabaseUrl() {
         return getUrl() + absoluteDbPath;
+    }
+
+    public static String getAbsoluteDbPath() {
+        return absoluteDbPath;
     }
 }

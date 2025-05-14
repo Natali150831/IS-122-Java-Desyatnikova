@@ -131,7 +131,7 @@ public class LibraryApp extends JFrame {
                 int year = Integer.parseInt(yearInput);
                 int copies = Integer.parseInt(copiesInput);
 
-                Book book = new Book(1L, author, title, year, copies);
+                Book book = new Book( author, title, year, copies);
                 if (bookService.addBook(book)) {
                     showSuccessMessage("Новая книга добавлена!");
                     loadBooks();

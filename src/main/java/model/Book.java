@@ -1,13 +1,12 @@
 package model;
 
 public class Book {
-    private Long id;
     private String author;
     private String title;
     private int publicationYear;
     private int copies;
     // Конструктор для создания объекта книги с указанными параметрами
-    public Book(long l, String author, String title, int publicationYear, int copies) {
+    public Book(String author, String title, int publicationYear, int copies) {
         this.author = author;
         this.title = title;
         this.publicationYear = publicationYear;
@@ -32,12 +31,9 @@ public class Book {
 
     @Override
     public String toString() {
-        return "ID: " + id + ", Автор: " + author + ", Название: " + title + ", Год издания: " + publicationYear + ", Копии: " + copies;
+        return "Автор: " + author + ", Название: " + title + ", Год издания: " + publicationYear + ", Копии: " + copies;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public void setAuthor(String author) {
         this.author = author;
@@ -53,9 +49,6 @@ public class Book {
 
     public void setCopies(int copies) {
         this.copies = copies;
-    }
-    public Long getId() {
-        return id;
     }
 
     public Book() {}

@@ -121,11 +121,10 @@ public class BookStorage implements IBookStorage {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     Book book = new Book(
-                            1L, rs.getString("AUTHOR"),
+                             rs.getString("AUTHOR"),
                             rs.getString("TITLE"),
                             rs.getInt("PUBLICATION_YEAR"),
                             rs.getInt("COPIES"));
-                    book.setId(rs.getLong("ID"));
                     return book;
                 }
             }
@@ -169,11 +168,10 @@ public class BookStorage implements IBookStorage {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     Book book = new Book(
-                            1L, rs.getString("AUTHOR"),
+                             rs.getString("AUTHOR"),
                             rs.getString("TITLE"),
                             rs.getInt("PUBLICATION_YEAR"),
                             rs.getInt("COPIES"));
-                    book.setId(rs.getLong("ID"));
                     books.add(book);
 
                     if (book.getCopies() == 0) {

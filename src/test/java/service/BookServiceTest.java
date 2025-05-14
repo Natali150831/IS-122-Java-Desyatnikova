@@ -26,7 +26,7 @@ public class BookServiceTest {
 
     @BeforeEach
     void setUp() {
-        book = new Book(1L, "Дж. К. Роулинг", "Гарри Поттер", 1997, 5);
+        book = new Book( "Дж. К. Роулинг", "Гарри Поттер", 1997, 5);
     }
 
     @Test
