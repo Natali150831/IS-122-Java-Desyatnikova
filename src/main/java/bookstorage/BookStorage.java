@@ -17,6 +17,7 @@ public class BookStorage implements IBookStorage {
     public boolean addBook(Book book) {
         String checkBookSql = "SELECT ID FROM BOOK_INFO WHERE AUTHOR = ? AND TITLE = ?";
         String insertBookSql = "INSERT INTO BOOK_INFO (AUTHOR, TITLE, PUBLICATION_YEAR) VALUES (?, ?, ?)";
+        String insertCopiesSql = "INSERT INTO BOOKS (BOOK_ID, COPIES) VALUES (?, ?)"; // Изменено с UPDATE на INSERT
         String updateCopiesSql = "UPDATE BOOKS SET COPIES = COPIES + ? WHERE BOOK_ID = ?";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -29,7 +30,14 @@ public class BookStorage implements IBookStorage {
             try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next()) {
                     bookId = rs.getLong("ID");
+                    // Если книга существует, обновляем количество копий
+                    try (PreparedStatement updateCopiesStmt = connection.prepareStatement(updateCopiesSql)) {
+                        updateCopiesStmt.setInt(1, book.getCopies());
+                        updateCopiesStmt.setLong(2, bookId);
+                        updateCopiesStmt.executeUpdate();
+                    }
                 } else {
+                    // Если книги нет, добавляем новую запись
                     try (PreparedStatement insertStmt = connection.prepareStatement(insertBookSql, Statement.RETURN_GENERATED_KEYS)) {
                         insertStmt.setString(1, book.getAuthor());
                         insertStmt.setString(2, book.getTitle());
@@ -39,6 +47,12 @@ public class BookStorage implements IBookStorage {
                         try (ResultSet generatedKeys = insertStmt.getGeneratedKeys()) {
                             if (generatedKeys.next()) {
                                 bookId = generatedKeys.getLong(1);
+                                // Добавляем запись о количестве копий
+                                try (PreparedStatement insertCopiesStmt = connection.prepareStatement(insertCopiesSql)) {
+                                    insertCopiesStmt.setLong(1, bookId);
+                                    insertCopiesStmt.setInt(2, book.getCopies());
+                                    insertCopiesStmt.executeUpdate();
+                                }
                             } else {
                                 throw new SQLException("Не удалось получить ID книги.");
                             }
@@ -46,13 +60,6 @@ public class BookStorage implements IBookStorage {
                     }
                 }
             }
-
-            try (PreparedStatement updateCopiesStmt = connection.prepareStatement(updateCopiesSql)) {
-                updateCopiesStmt.setInt(1, book.getCopies());
-                updateCopiesStmt.setLong(2, bookId);
-                updateCopiesStmt.executeUpdate();
-            }
-
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
